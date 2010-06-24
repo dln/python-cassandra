@@ -1,20 +1,23 @@
+VERSION   = 0.6.2
+
 SRCDIR    = cassandra
 GENDIR    = tmp
 SCRIPTDIR = scripts
-INTERFACE = https://svn.apache.org/repos/asf/incubator/cassandra/trunk/interface/cassandra.thrift
+INTERFACE = https://svn.apache.org/repos/asf/cassandra/trunk/interface/cassandra.thrift
 
-all: $(SRCDIR) $(SCRIPTDIR)/Cassandra-remote
+egg: bdist_egg
 
-egg: all
-	python setup.py bdist_egg
+all: setup.py $(SRCDIR) $(SCRIPTDIR)/Cassandra-remote
 
-sdist: all
-	python setup.py sdist
+bdist bdist_egg bdist_rpm install register sdist test: all
+	python setup.py $@
 
-$(SRCDIR)/Cassandra-remote: $(SRCDIR)
+setup.py: setup.py.in
+	sed "s/__VERSION__/'${VERSION}'/" <$^ >$@
+
 $(SRCDIR): $(GENDIR)/gen-py
 	mkdir -p $@
-	cp -R $^/cassandra/* $@
+	cp -R $^/$(SRCDIR)/* $@
 
 $(SCRIPTDIR)/Cassandra-remote: $(SRCDIR)/Cassandra-remote
 	mkdir -p $(SCRIPTDIR)
@@ -32,4 +35,5 @@ update:
 	svn cat $(INTERFACE) > $(shell basename $(INTERFACE))
 
 clean:
-	rm -rf $(GENDIR) $(SRCDIR) $(SCRIPTDIR) gen-* build dist *.egg-info
+	rm -rf $(GENDIR) $(SRCDIR) $(SCRIPTDIR) gen-* build dist *.egg-info setup.py
+
